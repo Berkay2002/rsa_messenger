@@ -1,0 +1,7 @@
+flask 
+pymongo 
+flask-socketio 
+PyQt5 
+websockets 
+PyCryptodome 
+python-dotenv
