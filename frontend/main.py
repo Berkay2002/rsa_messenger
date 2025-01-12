@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 class LoginWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        uic.loadUi('ui/login.ui', self)  # Load login UI
+        uic.loadUi('frontend\\ui\\login.ui', self)  # Load login UI
         self.login_button.clicked.connect(self.handle_login)  # Connect button click
 
     def handle_login(self):
@@ -21,7 +21,7 @@ class LoginWindow(QMainWindow):
 class ChatWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        uic.loadUi('ui/chat.ui', self)  # Load chat UI
+        uic.loadUi('frontend\\ui\\chat.ui', self)  # Load chat UI
 
         # Initialize WebSocket client
         self.websocket_client = ChatClient("ws://127.0.0.1:8000")  # Replace with your server URL
@@ -141,3 +141,8 @@ class WebSocketThread(QThread):
             message = await self.websocket_client.receive_message()
             self.message_received.emit(message)  # Emit the signal with the new message
 
+#Det här kanske behöver ändras
+app = QApplication([])
+window = LoginWindow()
+window.show()
+app.exec_()

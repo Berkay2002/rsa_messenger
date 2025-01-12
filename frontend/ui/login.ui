@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+    <class>LoginWindow</class>
+    <widget class="QWidget" name="LoginWindow">
+        <property name="geometry">
+            <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>400</width>
+                <height>300</height>
+            </rect>
+        </property>
+        <property name="windowTitle">
+            <string>Chat Window</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout">
+            <item>
+                <widget class="QTextBrowser" name="chatBox">
+                    <property name="placeholderText">
+                        <string>Chat messages will appear here...</string>
+                    </property>
+                </widget>
+            </item>
+            <item>
+                <widget class="QLineEdit" name="messageInput">
+                    <property name="placeholderText">
+                        <string>Enter message...</string>
+                    </property>
+                </widget>
+            </item>
+            <item>
+                <widget class="QPushButton" name="login_button">
+                    <property name="text">
+                        <string>Send</string>
+                    </property>
+                </widget>
+            </item>
+        </layout>
+    </widget>
+</ui>
