@@ -2,11 +2,11 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 from datetime import datetime, timezone
 import os
+from passlib.hash import bcrypt  # <-- For password hashing
 
 # Load environment variables
 load_dotenv()
 
-# Retrieve MongoDB URI from .env file
 mongo_uri = os.getenv("MONGODB_URI")
 db_name = os.getenv("DB_NAME")
 
@@ -32,19 +32,63 @@ try:
 except Exception as e:
     print(f"Failed to create indexes: {e}")
 
-# Example functions
-def create_user(username, public_key):
-    """Create a new user in the database, checking for duplicates."""
+def create_user(username, password=None, public_key=None, encrypted_private_key=None):
+    """
+    Create a new user in the database with a hashed password, 
+    storing a public key (and optionally an encrypted private key).
+    Raises ValueError if user already exists.
+    """
     try:
         existing_user = users_collection.find_one({"username": username})
         if existing_user:
             raise ValueError("User already exists")
-        user = {"username": username, "public_key": public_key}
-        users_collection.insert_one(user)
+
+        user_doc = {"username": username}
+
+        # If you have a plaintext password, hash it for secure storage:
+        if password:
+            user_doc["password_hash"] = bcrypt.hash(password)
+
+        # Store the public key
+        if public_key:
+            user_doc["public_key"] = public_key
+
+        # Optionally store an encrypted private key
+        if encrypted_private_key:
+            user_doc["encrypted_private_key"] = encrypted_private_key
+
+        users_collection.insert_one(user_doc)
         print(f"User {username} created successfully.")
     except Exception as e:
         print(f"Failed to create user {username}: {e}")
         raise
+
+def verify_user(username, password):
+    """
+    Verify a user's password.
+    Returns the user document if valid, otherwise None.
+    """
+    user_doc = users_collection.find_one({"username": username})
+    if not user_doc:
+        return None
+
+    # If there's no password_hash in the doc, user wasn't created with a password
+    if "password_hash" not in user_doc:
+        return None
+
+    # Compare the stored hash with the provided password
+    if bcrypt.verify(password, user_doc["password_hash"]):
+        return user_doc
+    return None
+
+def update_public_key(username, new_public_key):
+    """
+    If you ever need to update the stored public key.
+    """
+    users_collection.update_one(
+        {"username": username},
+        {"$set": {"public_key": new_public_key}}
+    )
 
 def save_message(sender, recipient, encrypted_message):
     """Save an encrypted message to the database."""
@@ -66,8 +110,7 @@ def save_message(sender, recipient, encrypted_message):
 def fetch_undelivered_messages(username):
     """Retrieve undelivered messages for a specific user."""
     try:
-        messages = messages_collection.find({"recipient": username, "delivered": False})
-        # Convert MongoDB objects to a JSON-serializable format
+        msgs = messages_collection.find({"recipient": username, "delivered": False})
         return [
             {
                 "sender": msg["sender"],
@@ -76,7 +119,7 @@ def fetch_undelivered_messages(username):
                 "delivered": msg.get("delivered", False),
                 "read": msg.get("read", False)
             }
-            for msg in messages
+            for msg in msgs
         ]
     except Exception as e:
         print(f"Failed to fetch undelivered messages for {username}: {e}")

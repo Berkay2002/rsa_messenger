@@ -6,32 +6,52 @@
             <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>400</width>
-                <height>300</height>
+                <width>320</width>
+                <height>180</height>
             </rect>
         </property>
         <property name="windowTitle">
-            <string>Chat Window</string>
+            <string>Login</string>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout">
+            <!-- Username Field -->
             <item>
-                <widget class="QTextBrowser" name="chatBox">
+                <widget class="QLineEdit" name="username_input">
                     <property name="placeholderText">
-                        <string>Chat messages will appear here...</string>
+                        <string>Enter Username</string>
                     </property>
                 </widget>
             </item>
+            
+            <!-- Password Field -->
             <item>
-                <widget class="QLineEdit" name="messageInput">
+                <widget class="QLineEdit" name="password_input">
                     <property name="placeholderText">
-                        <string>Enter message...</string>
+                        <string>Enter Password</string>
+                    </property>
+                    <property name="echoMode">
+                        <enum>QLineEdit::Password</enum>
                     </property>
                 </widget>
             </item>
+            
+            <!-- Error Label -->
+            <item>
+                <widget class="QLabel" name="error_label">
+                    <property name="alignment">
+                        <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="styleSheet">
+                        <string>color: red;</string>
+                    </property>
+                </widget>
+            </item>
+
+            <!-- Login Button -->
             <item>
                 <widget class="QPushButton" name="login_button">
                     <property name="text">
-                        <string>Send</string>
+                        <string>Login</string>
                     </property>
                 </widget>
             </item>

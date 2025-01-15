@@ -6,14 +6,15 @@
             <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>400</width>
-                <height>300</height>
+                <width>600</width>
+                <height>400</height>
             </rect>
         </property>
         <property name="windowTitle">
-            <string>Chat Window</string>
+            <string>Chat</string>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout">
+            <!-- Text area to display chat messages -->
             <item>
                 <widget class="QTextBrowser" name="chatBox">
                     <property name="placeholderText">
@@ -21,15 +22,28 @@
                     </property>
                 </widget>
             </item>
+
+            <!-- Recipient input -->
             <item>
-                <widget class="QLineEdit" name="messageInput">
+                <widget class="QLineEdit" name="recipient_input">
                     <property name="placeholderText">
-                        <string>Enter message...</string>
+                        <string>Recipient username</string>
                     </property>
                 </widget>
             </item>
+
+            <!-- Message input -->
             <item>
-                <widget class="QPushButton" name="sendButton">
+                <widget class="QLineEdit" name="message_input">
+                    <property name="placeholderText">
+                        <string>Type your message...</string>
+                    </property>
+                </widget>
+            </item>
+
+            <!-- Send button -->
+            <item>
+                <widget class="QPushButton" name="send_button">
                     <property name="text">
                         <string>Send</string>
                     </property>
