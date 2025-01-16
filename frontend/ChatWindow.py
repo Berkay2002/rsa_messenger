@@ -132,10 +132,15 @@ class ChatWindow(QWidget):
             self.message_input.clear()
         else:
             # If for some reason Socket.IO is not connected, fallback to REST
-            # (Though ideally you'd fix the socket connection.)
             self.update_chat("[Warning] Socket.IO not connected, using /send_message fallback.")
             try:
-                resp = requests.post("https://rsa-messenger-app-de61cf2676c2.herokuapp.com/login", json={...})
+                data = {
+                    "sender": self.username,
+                    "recipient": recipient,
+                    "message": enc_hex
+                }
+                print("[DEBUG] data:", data)  # <-- Add debug print to catch any set(...)
+                resp = requests.post("https://rsa-messenger-app-de61cf2676c2.herokuapp.com/send_message", json=data)
                 if resp.status_code == 200:
                     self.update_chat(f"[Me -> {recipient}]: {message}")
                     self.message_input.clear()
