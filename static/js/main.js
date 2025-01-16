@@ -1,4 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
+    console.log("DOM fully loaded and parsed");
+
     const socket = io();
 
     const landing = document.getElementById("landing");
@@ -15,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let privateKey = "";
 
     joinBtn.addEventListener("click", async () => {
+        console.log("JOIN button clicked");
         username = usernameInput.value.trim();
         const password = passwordInput.value.trim();
 
@@ -34,15 +37,18 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             const loginData = await loginResponse.json();
+            console.log("Login response:", loginData);
 
             if (loginResponse.status === 200) {
                 // Login successful
                 publicKey = loginData.public_key;
                 const encryptedPrivateKey = loginData.encrypted_private_key;
+                console.log("Encrypted Private Key received:", encryptedPrivateKey);
 
                 if (encryptedPrivateKey) {
                     // Decrypt the private key using the password
                     const decryptedPrivateKey = decryptPrivateKey(encryptedPrivateKey, password);
+                    console.log("Decrypted Private Key:", decryptedPrivateKey);
                     if (!decryptedPrivateKey) {
                         showError("Failed to decrypt private key.");
                         return;
@@ -73,9 +79,17 @@ document.addEventListener("DOMContentLoaded", () => {
         rsa.getKey();
         privateKey = rsa.getPrivateKey();
         publicKey = rsa.getPublicKey();
+        console.log("Generated Public Key:", publicKey);
+        console.log("Generated Private Key:", privateKey);
 
         // Encrypt the private key with the password
         const encryptedPrivateKey = encryptPrivateKey(privateKey, password);
+        console.log("Encrypted Private Key during registration:", encryptedPrivateKey);
+
+        if (!encryptedPrivateKey) {
+            showError("Failed to encrypt private key.");
+            return;
+        }
 
         // Register the user with the server
         fetch('/register', {
@@ -107,6 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function registerUserWithSocket() {
+        console.log("Registering user with Socket.IO");
         socket.emit("user_join", { username, public_key: publicKey });
         landing.style.display = "none";
         chat.style.display = "block";
@@ -125,6 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Encrypt the message using recipient's public key
         const encrypted = encryptMessage(message, publicKey);
+        console.log("Encrypted Message:", encrypted);
         socket.emit("new_message", { message: encrypted });
 
         appendMessage(`Me: ${message}`);
@@ -132,7 +148,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     socket.on("chat", (data) => {
+        console.log("Received chat event:", data);
         const decryptedMessage = decryptMessage(data.message, privateKey);
+        console.log("Decrypted Message:", decryptedMessage);
         appendMessage(`${data.username}: ${decryptedMessage}`);
     });
 
@@ -154,29 +172,41 @@ document.addEventListener("DOMContentLoaded", () => {
     function encryptMessage(message, pubKey) {
         const encrypt = new JSEncrypt();
         encrypt.setPublicKey(pubKey);
-        return encrypt.encrypt(message);
+        const encryptedMessage = encrypt.encrypt(message);
+        console.log("Message encrypted with public key:", encryptedMessage);
+        return encryptedMessage;
     }
 
     function decryptMessage(encryptedMessage, privKey) {
         const decrypt = new JSEncrypt();
         decrypt.setPrivateKey(privKey);
         const decrypted = decrypt.decrypt(encryptedMessage);
-        return decrypted ? decrypted : "Decryption failed.";
+        if (decrypted) {
+            console.log("Message decrypted successfully:", decrypted);
+            return decrypted;
+        } else {
+            console.error("Decryption failed for message:", encryptedMessage);
+            return "Decryption failed.";
+        }
     }
 
     function encryptPrivateKey(privateKey, password) {
-        // Simple encryption using AES for demonstration.
-        // For production, use a stronger encryption method.
-        const CryptoJS = CryptoJS || window.CryptoJS;
-        const encrypted = CryptoJS.AES.encrypt(privateKey, password).toString();
-        return encrypted;
+        try {
+            // Encrypt the private key using AES with the password
+            const encrypted = CryptoJS.AES.encrypt(privateKey, password).toString();
+            return encrypted;
+        } catch (error) {
+            console.error("Error encrypting private key:", error);
+            return null;
+        }
     }
 
     function decryptPrivateKey(encryptedPrivateKey, password) {
         try {
-            const CryptoJS = CryptoJS || window.CryptoJS;
+            // Decrypt the private key using AES with the password
             const bytes = CryptoJS.AES.decrypt(encryptedPrivateKey, password);
             const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+            console.log("Decrypted Private Key:", decrypted);
             return decrypted || null;
         } catch (e) {
             console.error("Private key decryption failed:", e);
@@ -185,6 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function showError(message) {
+        console.error("Error:", message);
         errorMessage.textContent = message;
     }
 });
