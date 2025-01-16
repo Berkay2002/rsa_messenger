@@ -48,11 +48,11 @@ class ChatWindow(QWidget):
         # 2) Define event handlers before connecting
         @self.sio.event
         def connect():
-            print("Socket.IO: Connected to server.")
+            print("Socket.IO: Connected to the default namespace.")
             # Register this user so the server knows we're online
-            self.sio.emit('register', {'username': self.username}, namespace='/chat')
+            self.sio.emit('register', {'username': self.username})
 
-        @self.sio.on('receive_message', namespace='/chat')
+        @self.sio.on('receive_message')
         def on_receive_message(data):
             """
             Called when the server emits 'receive_message'.
@@ -76,20 +76,15 @@ class ChatWindow(QWidget):
         def connect_error(err):
             print(f"[ChatWindow] Socket.IO connection failed: {err}")
 
-        @self.sio.on('error', namespace='/chat')
-        def on_error(msg):
-            print(f"[ChatWindow] Socket.IO error event: {msg}")
-
         @self.sio.event
         def disconnect():
-            print("Socket.IO: Disconnected from server.")
+            print("Socket.IO: Disconnected from the default namespace.")
 
         # 3) Connect to Socket.IO server
-        #    (Adjust URL/port if your server is elsewhere)
+        #    (Ensure the URL is correct and the server is accessible)
         try:
             self.sio.connect(
                 "https://rsa-messenger-app-de61cf2676c2.herokuapp.com",
-                namespaces=['/chat'],
                 transports=['websocket', 'polling']
             )
         except Exception as e:
@@ -135,7 +130,7 @@ class ChatWindow(QWidget):
         }
         if self.sio.connected:
             # Real-time emit
-            self.sio.emit('send_message', data, namespace='/chat')
+            self.sio.emit('send_message', data)
             # Show on our own chat box
             self.update_chat(f"[Me -> {recipient}]: {message}")
             self.message_input.clear()
@@ -143,12 +138,6 @@ class ChatWindow(QWidget):
             # If for some reason Socket.IO is not connected, fallback to REST
             self.update_chat("[Warning] Socket.IO not connected, using /send_message fallback.")
             try:
-                data = {
-                    "sender": self.username,
-                    "recipient": recipient,
-                    "message": enc_hex
-                }
-                print("[DEBUG] data:", data)  # <-- Add debug print to catch any set(...)
                 resp = requests.post("https://rsa-messenger-app-de61cf2676c2.herokuapp.com/send_message", json=data)
                 if resp.status_code == 200:
                     self.update_chat(f"[Me -> {recipient}]: {message}")

@@ -23,7 +23,7 @@ socketio = SocketIO(app, async_mode='eventlet')
 
 active_users = {}  # Track online users
 
-@app.route('/')
+@app.route("/", methods=["POST", "GET"])
 def root():
     return "Welcome to the RSA Messenger API"
 
@@ -145,21 +145,21 @@ def get_public_key():
 
 # ------------ SocketIO Events ------------
 
-@socketio.on('connect', namespace='/chat')
+@socketio.on('connect')
 def handle_connect():
-    print("A user connected to /chat namespace.")
-    emit('connected', {'data': 'Connected to server'}, namespace='/chat')
+    print("A user connected to the default namespace.")
+    emit('connected', {'data': 'Connected to server'})
 
-@socketio.on('register', namespace='/chat')
+@socketio.on('register')
 def handle_register(data):
     username = data.get('username')
     if not username or not users_collection.find_one({"username": username}):
-        emit('error', {"message": "Invalid or non-existent user"}, namespace='/chat')
+        emit('error', {"message": "Invalid or non-existent user"})
         return
     active_users[username] = request.sid
     print(f"{username} is online. SID: {request.sid}")
 
-@socketio.on('send_message', namespace='/chat')
+@socketio.on('send_message')
 def handle_send_message(data):
     sender = data['sender']
     recipient = data['recipient']
@@ -167,13 +167,13 @@ def handle_send_message(data):
     print(f"Received message from {sender} to {recipient}: {encrypted_message}")
 
     if recipient in active_users:
-        emit('receive_message', data, to=active_users[recipient], namespace='/chat')
+        emit('receive_message', data, to=active_users[recipient])
         print(f"Message sent to {recipient} in real-time.")
     else:
         save_message(sender, recipient, encrypted_message)
         print(f"Message saved for offline recipient {recipient}.")
 
-@socketio.on('disconnect', namespace='/chat')
+@socketio.on('disconnect')
 def handle_disconnect():
     for user, sid in list(active_users.items()):
         if sid == request.sid:
