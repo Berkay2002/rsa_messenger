@@ -58,6 +58,7 @@ class ChatWindow(QWidget):
             Called when the server emits 'receive_message'.
             data: { 'sender': ..., 'recipient': ..., 'message': <hex-encoded> }
             """
+            print(f"Received message: {data}")  # Debug print
             sender = data.get('sender')
             enc_hex = data.get('message')
             if not sender or not enc_hex:
@@ -86,7 +87,7 @@ class ChatWindow(QWidget):
         # 3) Connect to Socket.IO server
         #    (Adjust URL/port if your server is elsewhere)
         try:
-            self.sio.connect("https://rsa-messenger-app-de61cf2676c2.herokuapp.com", namespaces=['/chat'], transports=['websocket', 'polling'])
+            self.sio.connect("https://rsa-messenger-app-de61cf2676c2.herokuapp.com/chat", transports=['websocket', 'polling'])
         except Exception as e:
             print(f"[ChatWindow] Could not connect to Socket.IO: {e}")
 
