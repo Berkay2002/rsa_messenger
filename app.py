@@ -172,10 +172,10 @@ def handle_register(data):
     """
     username = data.get('username')
     if not username or not users_collection.find_one({"username": username}):
-        emit('error', {"message": "Invalid or non-existent user"})
+        emit('error', {"message": "Invalid or non-existent user"}, namespace='/chat')
         return
     active_users[username] = request.sid
-    print(f"{username} is online.")
+    print(f"{username} is online. SID: {request.sid}")
 
 @socketio.on('send_message', namespace='/chat')
 def handle_send_message(data):
@@ -186,13 +186,14 @@ def handle_send_message(data):
     sender = data['sender']
     recipient = data['recipient']
     encrypted_message = data['message']
+    print(f"Received message from {sender} to {recipient}: {encrypted_message}")
 
     if recipient in active_users:
-        # Send in real-time
-        emit('receive_message', data, to=active_users[recipient])
+        emit('receive_message', data, to=active_users[recipient], namespace='/chat')
+        print(f"Message sent to {recipient} in real-time.")
     else:
-        # Save to DB for offline recipient
         save_message(sender, recipient, encrypted_message)
+        print(f"Message saved for offline recipient {recipient}.")
 
 @socketio.on('message_read')
 def handle_message_read(data):
@@ -207,7 +208,7 @@ def handle_disconnect():
     for user, sid in list(active_users.items()):
         if sid == request.sid:
             del active_users[user]
-            print(f"{user} disconnected.")
+            print(f"{user} disconnected. SID: {request.sid}")
             break
 
 if __name__ == "__main__":

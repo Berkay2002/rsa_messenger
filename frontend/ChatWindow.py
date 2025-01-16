@@ -86,7 +86,7 @@ class ChatWindow(QWidget):
         # 3) Connect to Socket.IO server
         #    (Adjust URL/port if your server is elsewhere)
         try:
-            self.sio.connect("https://rsa-messenger-app-de61cf2676c2.herokuapp.com/chat", transports=['websocket', 'polling'])
+            self.sio.connect("https://rsa-messenger-app-de61cf2676c2.herokuapp.com", namespaces=['/chat'], transports=['websocket', 'polling'])
         except Exception as e:
             print(f"[ChatWindow] Could not connect to Socket.IO: {e}")
 
