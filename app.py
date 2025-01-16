@@ -22,7 +22,7 @@ active_users = {}  # Track online users
 
 @app.route('/')
 def root():
-    return "Welcome to the RSA Messenger API!"
+    return "Welcome to the RSA Messenger API"
 
 
 @app.route('/register', methods=['POST'])
@@ -32,17 +32,14 @@ def register_user():
     and optionally encrypted_private_key.
     """
     data = request.get_json()
-
     username = data.get('username')
     password = data.get('password')
     public_key = data.get('public_key')
     encrypted_private_key = data.get('encrypted_private_key')  # optional
 
-    # Basic checks
     if not username or not password or not public_key:
         return jsonify({"error": "username, password, and public_key are required"}), 400
     
-    # Try creating user in DB
     try:
         create_user(
             username=username,
@@ -51,7 +48,6 @@ def register_user():
             encrypted_private_key=encrypted_private_key
         )
     except ValueError as e:
-        # E.g. "User already exists"
         return jsonify({"error": str(e)}), 400
     
     return jsonify({"message": "User registered successfully"}), 201
@@ -63,27 +59,20 @@ def login_user():
     Return the user's stored public_key and encrypted_private_key if it exists.
     """
     data = request.get_json()
-
     username = data.get('username')
     password = data.get('password')
 
     if not username or not password:
         return jsonify({"error": "username and password are required"}), 400
 
-    # Check the DB
     user_doc = verify_user(username, password)
     if not user_doc:
-        # Could be user not found or incorrect password
-        # Distinguish 404 vs 400 if you like
         existing_user = users_collection.find_one({"username": username})
         if existing_user:
-            # Means user exists but password was incorrect
             return jsonify({"error": "Incorrect password"}), 400
         else:
-            # Means user does not exist
             return jsonify({"error": "User does not exist"}), 404
 
-    # If we get here, password is correct
     return jsonify({
         "message": "Login successful",
         "public_key": user_doc.get("public_key", None),
@@ -118,7 +107,6 @@ def fetch_messages_route():
 
     messages = fetch_undelivered_messages(username)
 
-    # Format timestamps as ISO 8601
     formatted_messages = [
         {
             "sender": msg["sender"],
@@ -141,12 +129,10 @@ def get_public_key():
     if not username:
         return jsonify({"error": "Username is required"}), 400
 
-    # Look up the user in Mongo
     user_doc = users_collection.find_one({"username": username})
     if not user_doc:
         return jsonify({"error": f"User {username} not found"}), 404
 
-    # Make sure the user has a "public_key" field
     public_key = user_doc.get("public_key")
     if not public_key:
         return jsonify({"error": f"User {username} has no public key stored"}), 400
@@ -160,7 +146,7 @@ def get_public_key():
 
 @socketio.on('connect', namespace='/chat')
 def handle_connect():
-    print("A user connected.")
+    print("A user connected to /chat namespace.")
     emit('connected', {'data': 'Connected to server'}, namespace='/chat')
 
 @socketio.on('register', namespace='/chat')
@@ -194,14 +180,6 @@ def handle_send_message(data):
     else:
         save_message(sender, recipient, encrypted_message)
         print(f"Message saved for offline recipient {recipient}.")
-
-@socketio.on('message_read')
-def handle_message_read(data):
-    message_id = data['message_id']
-    messages_collection.update_one(
-        {"_id": message_id},
-        {"$set": {"read": True}}
-    )
 
 @socketio.on('disconnect', namespace='/chat')
 def handle_disconnect():
