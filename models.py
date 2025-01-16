@@ -2,7 +2,7 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 from datetime import datetime, timezone
 import os
-from passlib.hash import bcrypt  # <-- For password hashing
+from passlib.hash import bcrypt
 
 # Load environment variables
 load_dotenv()
@@ -22,12 +22,16 @@ except Exception as e:
 # Define collections
 users_collection = db['users']
 messages_collection = db['messages']
+friends_collection = db['friends']         # New Collection for Friends
+groups_collection = db['groups']           # New Collection for Groups
 
 # Create indexes
 try:
     print("Creating indexes...")
-    users_collection.create_index("username", unique=True)  # Ensure unique usernames
-    messages_collection.create_index([("recipient", 1), ("delivered", 1)])  # For undelivered message lookups
+    users_collection.create_index("username", unique=True)
+    messages_collection.create_index([("recipient", 1), ("delivered", 1)])
+    friends_collection.create_index([("user", 1), ("friend", 1)], unique=True)  # Ensure unique friend pairs
+    groups_collection.create_index("group_name", unique=True)                    # Ensure unique group names
     print("Indexes created successfully.")
 except Exception as e:
     print(f"Failed to create indexes: {e}")
@@ -81,6 +85,113 @@ def verify_user(username, password):
         return user_doc
     return None
 
+
+def add_friend(user, friend):
+    """
+    Add a bidirectional friendship between two users.
+    """
+    try:
+        if user == friend:
+            raise ValueError("Cannot add yourself as a friend.")
+        
+        # Check if both users exist
+        user_doc = users_collection.find_one({"username": user})
+        friend_doc = users_collection.find_one({"username": friend})
+        if not user_doc or not friend_doc:
+            raise ValueError("Both users must exist to add as friends.")
+        
+        # Insert friendship both ways
+        friends_collection.insert_one({"user": user, "friend": friend})
+        friends_collection.insert_one({"user": friend, "friend": user})
+        print(f"Friendship established between {user} and {friend}.")
+    except Exception as e:
+        print(f"Failed to add friend: {e}")
+        raise
+
+def get_friends(username):
+    """
+    Retrieve a list of friends for a given user.
+    """
+    try:
+        friends = friends_collection.find({"user": username})
+        return [friend['friend'] for friend in friends]
+    except Exception as e:
+        print(f"Failed to fetch friends for {username}: {e}")
+        raise
+
+def create_group(group_name, creator, members):
+    """
+    Create a new group with the specified members.
+    """
+    try:
+        existing_group = groups_collection.find_one({"group_name": group_name})
+        if existing_group:
+            raise ValueError("Group name already exists.")
+        
+        # Ensure all members exist
+        for member in members:
+            user_doc = users_collection.find_one({"username": member})
+            if not user_doc:
+                raise ValueError(f"User {member} does not exist.")
+        
+        group_doc = {
+            "group_name": group_name,
+            "creator": creator,
+            "members": members,
+            "created_at": datetime.now(timezone.utc)
+        }
+        groups_collection.insert_one(group_doc)
+        print(f"Group '{group_name}' created successfully with members: {members}.")
+    except Exception as e:
+        print(f"Failed to create group '{group_name}': {e}")
+        raise
+
+def add_member_to_group(group_name, username):
+    """
+    Add a member to an existing group.
+    """
+    try:
+        group = groups_collection.find_one({"group_name": group_name})
+        if not group:
+            raise ValueError("Group does not exist.")
+        
+        if username in group['members']:
+            raise ValueError(f"User {username} is already a member of the group.")
+        
+        users_collection.find_one({"username": username})  # Ensure user exists
+        groups_collection.update_one(
+            {"group_name": group_name},
+            {"$push": {"members": username}}
+        )
+        print(f"User {username} added to group '{group_name}'.")
+    except Exception as e:
+        print(f"Failed to add member to group: {e}")
+        raise
+
+def get_groups(username):
+    """
+    Retrieve a list of groups that the user is a member of.
+    """
+    try:
+        groups = groups_collection.find({"members": username})
+        return [group['group_name'] for group in groups]
+    except Exception as e:
+        print(f"Failed to fetch groups for {username}: {e}")
+        raise
+
+def get_group_members(group_name):
+    """
+    Retrieve members of a specific group.
+    """
+    try:
+        group = groups_collection.find_one({"group_name": group_name})
+        if group:
+            return group['members']
+        return []
+    except Exception as e:
+        print(f"Failed to fetch members for group '{group_name}': {e}")
+        raise
+    
 def update_public_key(username, new_public_key):
     """
     If you ever need to update the stored public key.
