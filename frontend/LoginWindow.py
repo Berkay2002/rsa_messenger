@@ -16,7 +16,7 @@ from ChatWindow import ChatWindow
 class LoginWindow(QWidget):
     def __init__(self):
         super().__init__()
-        uic.loadUi('./ui/login.ui', self)  # Adjust path if needed
+        uic.loadUi('./frontend/ui/login.ui', self)  # Adjust path if needed
 
         # Find UI elements
         self.username_input = self.findChild(QLineEdit, "username_input")

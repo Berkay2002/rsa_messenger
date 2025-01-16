@@ -19,12 +19,9 @@ socketio = SocketIO(app)
 active_users = {}  # Track online users
 
 @app.route('/')
-def index():
-    return send_from_directory(app.static_folder, 'index.html')
+def root():
+    return "Welcome to the RSA Messenger API!"
 
-@app.route('/<path:path>')
-def serve_static(path):
-    return send_from_directory(app.static_folder, path)
 
 @app.route('/register', methods=['POST'])
 def register_user():

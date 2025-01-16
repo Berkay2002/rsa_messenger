@@ -17,7 +17,7 @@ class ChatWindow(QWidget):
     def __init__(self, username, private_key, public_key):
         super().__init__()
         # Load chat UI
-        uic.loadUi('./ui/chat.ui', self)
+        uic.loadUi('./frontend/ui/chat.ui', self)
 
         # Store user info
         self.username = username
