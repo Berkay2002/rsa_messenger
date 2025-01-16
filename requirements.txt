@@ -7,3 +7,4 @@ PyCryptodome
 python-dotenv
 bcrypt
 passlib
+gunicorn

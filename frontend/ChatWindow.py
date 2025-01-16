@@ -82,7 +82,7 @@ class ChatWindow(QWidget):
         # 3) Connect to Socket.IO server
         #    (Adjust URL/port if your server is elsewhere)
         try:
-            self.sio.connect("http://127.0.0.1:5000")
+            self.sio.connect("https://rsa-messenger-app.herokuapp.com")
         except Exception as e:
             print(f"[ChatWindow] Could not connect to Socket.IO: {e}")
 
@@ -135,7 +135,7 @@ class ChatWindow(QWidget):
             # (Though ideally you'd fix the socket connection.)
             self.update_chat("[Warning] Socket.IO not connected, using /send_message fallback.")
             try:
-                resp = requests.post("http://127.0.0.1:5000/send_message", json=data)
+                resp = requests.post("https://rsa-messenger-app.herokuapp.com/send_message", json=data)
                 if resp.status_code == 200:
                     self.update_chat(f"[Me -> {recipient}]: {message}")
                     self.message_input.clear()
@@ -151,7 +151,7 @@ class ChatWindow(QWidget):
         and decrypt them. This runs once at window init.
         """
         try:
-            resp = requests.get("http://127.0.0.1:5000/fetch_messages", params={
+            resp = requests.get("https://rsa-messenger-app.herokuapp.com/fetch_messages", params={
                 "username": self.username
             })
             if resp.status_code == 200:
@@ -177,7 +177,7 @@ class ChatWindow(QWidget):
         """
         Calls /get_public_key?username={recipient} to retrieve the user's public key.
         """
-        url = f"http://127.0.0.1:5000/get_public_key?username={recipient}"
+        url = f"https://rsa-messenger-app.herokuapp.com/get_public_key?username={recipient}"
         try:
             resp = requests.get(url)
             if resp.status_code == 200:
