@@ -6,8 +6,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const landing = document.getElementById("landing");
     const chat = document.getElementById("chat");
     const joinBtn = document.getElementById("join-btn");
+    const sendBtn = document.getElementById("send-btn");
     const usernameInput = document.getElementById("username");
     const passwordInput = document.getElementById("password");
+    const recipientInput = document.getElementById("recipient");
     const messageInput = document.getElementById("message");
     const chatMessages = document.getElementById("chat-messages");
     const errorMessage = document.getElementById("error-message");
@@ -73,6 +75,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    sendBtn.addEventListener("click", () => {
+        sendMessage();
+    });
+
     function registerUser(username, password) {
         // Generate RSA key pair
         const rsa = new JSEncrypt({ default_key_size: 2048 });
@@ -127,31 +133,55 @@ document.addEventListener("DOMContentLoaded", () => {
         chat.style.display = "block";
     }
 
-    messageInput.addEventListener("keyup", function (event) {
-        if (event.key === "Enter") {
-            sendMessage();
-        }
-    });
-
     function sendMessage() {
         const message = messageInput.value.trim();
-        const recipient = username; // For simplicity, sending to self
-        if (!message) return;
+        const recipient = recipientInput.value.trim();
+        if (!recipient) {
+            alert("Please enter a recipient username.");
+            return;
+        }
+        if (!message) {
+            alert("Message cannot be empty.");
+            return;
+        }
 
-        // Encrypt the message using recipient's public key
-        const encrypted = encryptMessage(message, publicKey);
-        console.log("Encrypted Message:", encrypted);
-        socket.emit("new_message", { message: encrypted });
+        // Fetch recipient's public key
+        fetch(`/get_public_key?username=${recipient}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.public_key) {
+                    // Encrypt the message using recipient's public key
+                    const encrypted = encryptMessage(message, data.public_key);
+                    console.log("Encrypted Message:", encrypted);
 
-        appendMessage(`Me: ${message}`);
-        messageInput.value = "";
+                    // Emit the message with recipient info
+                    socket.emit("new_message", { recipient, message: encrypted });
+
+                    appendMessage(`Me to ${recipient}: ${message}`);
+                    messageInput.value = "";
+                } else {
+                    showError(`Public key for ${recipient} not found.`);
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching public key:", error);
+                showError("Failed to fetch recipient's public key.");
+            });
     }
 
     socket.on("chat", (data) => {
         console.log("Received chat event:", data);
-        const decryptedMessage = decryptMessage(data.message, privateKey);
-        console.log("Decrypted Message:", decryptedMessage);
-        appendMessage(`${data.username}: ${decryptedMessage}`);
+        const sender = data.username;
+        const encryptedMessage = data.message;
+
+        // Only process messages sent to this user
+        // The message was encrypted with this user's public key
+        const decryptedMessage = decryptMessage(encryptedMessage, privateKey);
+        if (decryptedMessage !== "Decryption failed.") {
+            appendMessage(`${sender}: ${decryptedMessage}`);
+        } else {
+            appendMessage(`${sender}: Decryption failed.`);
+        }
     });
 
     socket.on("connect", () => {
