@@ -132,15 +132,11 @@ document.addEventListener("DOMContentLoaded", () => {
         landing.style.display = "none";
         chat.style.display = "block";
     }
-
-    sendBtn.addEventListener("click", () => {
-        sendMessage();
-    });
-
+    
     function sendMessage() {
         const message = messageInput.value.trim();
-        const recipient = recipientInput.value.trim(); // Get recipient from input
-
+        const recipient = recipientInput.value.trim();
+    
         if (!recipient) {
             alert("Please enter a recipient username.");
             return;
@@ -149,23 +145,24 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Message cannot be empty.");
             return;
         }
-
+    
         // Fetch recipient's public key
         fetch(`/get_public_key?username=${encodeURIComponent(recipient)}`)
             .then(response => response.json())
             .then(data => {
                 if (data.public_key) {
+                    console.log(`Fetched public key for ${recipient}:`, data.public_key);
                     // Encrypt the message using recipient's public key
                     const encrypted = encryptMessage(message, data.public_key);
                     console.log("Encrypted Message:", encrypted);
-
+    
                     // Emit the message with recipient info
                     socket.emit("new_message", { recipient, message: encrypted });
-
                     appendMessage(`Me to ${recipient}: ${message}`);
                     messageInput.value = "";
                 } else {
                     showError(`Public key for ${recipient} not found.`);
+                    console.error(`Public key for ${recipient} not found.`);
                 }
             })
             .catch(error => {
@@ -178,9 +175,14 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("Received chat event:", data);
         const sender = data.username;
         const encryptedMessage = data.message;
-
+    
+        if (!sender) {
+            console.error("Sender is undefined in chat event.");
+            appendMessage(`Unknown sender: Decryption failed.`);
+            return;
+        }
+    
         // Only process messages sent to this user
-        // The message was encrypted with this user's public key
         const decryptedMessage = decryptMessage(encryptedMessage, privateKey);
         if (decryptedMessage !== "Decryption failed.") {
             appendMessage(`${sender}: ${decryptedMessage}`);

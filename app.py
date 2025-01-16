@@ -138,18 +138,21 @@ def handle_user_join(data):
     public_key = data.get('public_key')
     if not username or not public_key:
         emit("error", {"message": "Username and public_key are required."})
+        print("Error: Username or public_key missing in user_join event.")
         return
     
     # Check if username is already connected
     if username in active_users:
         emit("error", {"message": "Username already connected."})
+        print(f"Error: Username {username} already connected.")
         return
 
     active_users[username] = request.sid
-    print(f"User {username} joined! SID: {request.sid}")
+    print(f"User joined: {username} with SID: {request.sid}")
     
     # Notify all users that a new user has joined
     emit("chat", {"message": f"{username} has joined the chat."}, broadcast=True)
+
 @socketio.on('new_message')
 def handle_new_message(data):
     recipient = data.get("recipient")
@@ -164,10 +167,14 @@ def handle_new_message(data):
 
     if not sender:
         emit("error", {"message": "User not identified."})
+        print("Error: Sender not identified for the new_message event.")
         return
+
+    print(f"Handling message from {sender} to {recipient}")
 
     if not recipient or not encrypted_message:
         emit("error", {"message": "Recipient and message are required."})
+        print("Error: Recipient or message missing in new_message event.")
         return
 
     # Check if recipient is online
@@ -175,7 +182,7 @@ def handle_new_message(data):
     if recipient_sid:
         # Send the message to the recipient only
         emit("chat", {"message": encrypted_message, "username": sender}, room=recipient_sid)
-        print(f"New message from {sender} to {recipient}: {encrypted_message}")
+        print(f"Sent encrypted message from {sender} to {recipient}")
     else:
         # If recipient is offline, save the message for later delivery
         save_message(sender, recipient, encrypted_message)
