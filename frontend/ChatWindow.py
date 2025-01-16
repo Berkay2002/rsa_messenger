@@ -79,10 +79,14 @@ class ChatWindow(QWidget):
         def on_error(msg):
             print(f"[ChatWindow] Socket.IO error event: {msg}")
 
+        @self.sio.event
+        def disconnect():
+            print("Socket.IO: Disconnected from server.")
+
         # 3) Connect to Socket.IO server
         #    (Adjust URL/port if your server is elsewhere)
         try:
-            self.sio.connect("https://rsa-messenger-app-de61cf2676c2.herokuapp.com")
+            self.sio.connect("https://rsa-messenger-app-de61cf2676c2.herokuapp.com/")
         except Exception as e:
             print(f"[ChatWindow] Could not connect to Socket.IO: {e}")
 

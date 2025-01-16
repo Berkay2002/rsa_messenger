@@ -158,6 +158,8 @@ def get_public_key():
 @socketio.on('connect')
 def handle_connect():
     print("A user connected.")
+    emit('connected', {'data': 'Connected to server'})
+
 
 @socketio.on('register')
 def handle_register(data):
