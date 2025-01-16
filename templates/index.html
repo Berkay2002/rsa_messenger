@@ -63,10 +63,12 @@
             width: 100%;
             padding: 10px;
             box-sizing: border-box;
+            margin-top: 10px;
         }
 
         #send-btn {
             padding: 10px 20px;
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -81,7 +83,10 @@
     <div id="chat" style="display:none;">
         <ul id="chat-messages">
         </ul>
+        <!-- New Recipient Input Field -->
+        <input type="text" id="recipient" placeholder="Recipient Username">
         <input type="text" id="message" placeholder="Enter a Message">
+        <button id="send-btn">SEND</button>
     </div>
 </body>
 </html>

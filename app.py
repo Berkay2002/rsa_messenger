@@ -139,24 +139,49 @@ def handle_user_join(data):
     if not username or not public_key:
         emit("error", {"message": "Username and public_key are required."})
         return
-    active_users[username] = request.sid
-    print(f"User {username} joined!")
-    emit("chat", {"message": f"{username} has joined the chat."}, broadcast=True)
+    
+    # Check if username is already connected
+    if username in active_users:
+        emit("error", {"message": "Username already connected."})
+        return
 
+    active_users[username] = request.sid
+    print(f"User {username} joined! SID: {request.sid}")
+    
+    # Notify all users that a new user has joined
+    emit("chat", {"message": f"{username} has joined the chat."}, broadcast=True)
 @socketio.on('new_message')
 def handle_new_message(data):
-    message = data.get("message")
-    username = None 
+    recipient = data.get("recipient")
+    encrypted_message = data.get("message")
+    sender = None
+
+    # Identify the sender based on the session ID
     for user, sid in active_users.items():
         if sid == request.sid:
-            username = user
+            sender = user
             break
-    if username and message:
-        emit("chat", {"message": message, "username": username}, broadcast=True)
-        print(f"New message from {username}: {message}")
-    else:
-        emit("error", {"message": "Invalid message or user."})
 
+    if not sender:
+        emit("error", {"message": "User not identified."})
+        return
+
+    if not recipient or not encrypted_message:
+        emit("error", {"message": "Recipient and message are required."})
+        return
+
+    # Check if recipient is online
+    recipient_sid = active_users.get(recipient)
+    if recipient_sid:
+        # Send the message to the recipient only
+        emit("chat", {"message": encrypted_message, "username": sender}, room=recipient_sid)
+        print(f"New message from {sender} to {recipient}: {encrypted_message}")
+    else:
+        # If recipient is offline, save the message for later delivery
+        save_message(sender, recipient, encrypted_message)
+        print(f"Recipient {recipient} is offline. Message from {sender} saved.")
+        emit("error", {"message": f"{recipient} is offline. Message saved for later delivery."})
+        
 @socketio.on('disconnect')
 def handle_disconnect():
     for user, sid in list(active_users.items()):
