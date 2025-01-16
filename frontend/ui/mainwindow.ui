@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+    <class>MainWindow</class>
+    <widget class="QWidget" name="MainWindow">
+        <property name="geometry">
+            <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>800</width>
+                <height>600</height>
+            </rect>
+        </property>
+        <property name="windowTitle">
+            <string>Main Chat</string>
+        </property>
+        <layout class="QHBoxLayout" name="horizontalLayout">
+            <!-- Left panel for user list, group list, etc. -->
+            <item>
+                <layout class="QVBoxLayout" name="leftLayout">
+                    <item>
+                        <widget class="QPushButton" name="profile_button">
+                            <property name="text">
+                                <string>My Profile</string>
+                            </property>
+                        </widget>
+                    </item>
+                    <item>
+                        <widget class="QListWidget" name="online_users_list">
+                            <property name="toolTip">
+                                <string>Online Users</string>
+                            </property>
+                        </widget>
+                    </item>
+                    <item>
+                        <widget class="QPushButton" name="create_group_button">
+                            <property name="text">
+                                <string>Create Group</string>
+                            </property>
+                        </widget>
+                    </item>
+                    <item>
+                        <widget class="QPushButton" name="join_group_button">
+                            <property name="text">
+                                <string>Join Group</string>
+                            </property>
+                        </widget>
+                    </item>
+                    <item>
+                        <widget class="QListWidget" name="group_list">
+                            <property name="toolTip">
+                                <string>Groups</string>
+                            </property>
+                        </widget>
+                    </item>
+                    <item>
+                        <widget class="QListWidget" name="friends_list_widget">  <!-- Add this block -->
+                            <property name="toolTip">
+                                <string>Friends</string>
+                            </property>
+                        </widget>
+                    </item>
+                </layout>
+            </item>
+
+            <!-- Right panel for ChatWindow or stack of widgets -->
+            <item>
+                <widget class="QWidget" name="chat_container">
+                    <layout class="QVBoxLayout" name="chatLayout"/>
+                </widget>
+            </item>
+        </layout>
+    </widget>
+</ui>

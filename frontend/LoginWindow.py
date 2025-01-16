@@ -12,7 +12,7 @@ from crypto_utils import (
 )
 
 # Import your ChatWindow class
-from ChatWindow import ChatWindow
+from MainWindow import MainWindow
 
 class LoginWindow(QWidget):
     def __init__(self):
@@ -131,8 +131,8 @@ class LoginWindow(QWidget):
         """
         Switch to the ChatWindow, passing the keys along.
         """
-        self.chat_window = ChatWindow(username, private_key, public_key)
-        self.chat_window.show()
+        self.main_window = MainWindow(username, private_key, public_key)
+        self.main_window.show()
         self.close()
 
     def set_error(self, msg):

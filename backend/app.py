@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, emit
 import logging
+from datetime import datetime
 
 # Import the updated model functions
 from models import (
@@ -9,8 +10,16 @@ from models import (
     save_message,
     fetch_undelivered_messages,
     mark_messages_as_delivered,
+    fetch_group_messages,
     messages_collection,
-    users_collection
+    users_collection,
+    update_profile,
+    get_profile,
+    create_group,
+    join_group,
+    send_group_message,
+    groups_collection,
+    add_friend
 )
 
 app = Flask(__name__)
@@ -146,10 +155,134 @@ def get_public_key():
 
     return jsonify({"public_key": public_key}), 200
 
+@app.route("/update_profile", methods=["POST"])
+def update_profile_route():
+    """
+    Update the profile fields (display_name, avatar_url).
+    Expects JSON { "username": ..., "display_name": "...", "avatar_url": "..." }
+    """
+    data = request.get_json()
+    username = data.get("username")
+    if not username:
+        return jsonify({"error": "Username is required"}), 400
+
+    display_name = data.get("display_name")
+    avatar_url = data.get("avatar_url")
+    updated_count = update_profile(username, display_name, avatar_url)
+    if updated_count > 0:
+        return jsonify({"message": "Profile updated."}), 200
+    return jsonify({"message": "No changes made."}), 200
+
+@app.route("/get_profile", methods=["GET"])
+def get_profile_route():
+    """
+    Return the profile info for a given user.
+    Example: GET /get_profile?username=Alice
+    """
+    username = request.args.get("username")
+    if not username:
+        return jsonify({"error": "Username required"}), 400
+    profile_data = get_profile(username)
+    if not profile_data:
+        return jsonify({"error": "User not found"}), 404
+    return jsonify(profile_data), 200
+
+@app.route("/create_group", methods=["POST"])
+def create_group_route():
+    """
+    Create a new group. 
+    Expects JSON { "group_name": "...", "creator": "..." }
+    """
+    data = request.get_json()
+    group_name = data.get("group_name")
+    creator = data.get("creator")
+    if not group_name or not creator:
+        return jsonify({"error": "group_name and creator required"}), 400
+    try:
+        create_group(group_name, creator)
+        return jsonify({"message": f"Group {group_name} created."}), 201
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/join_group", methods=["POST"])
+def join_group_route():
+    """
+    Add a user to an existing group.
+    Expects JSON { "group_name": "...", "username": "..." }
+    """
+    data = request.get_json()
+    group_name = data.get("group_name")
+    username = data.get("username")
+    if not group_name or not username:
+        return jsonify({"error": "group_name and username required"}), 400
+    try:
+        join_group(group_name, username)
+        return jsonify({"message": f"{username} joined group {group_name}."}), 200
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/send_group_message", methods=["POST"])
+def send_group_message_route():
+    """
+    Store a message in the group. 
+    Expects JSON { "group_name": "...", "sender": "...", "message": <hex-encoded> }
+    """
+    data = request.get_json()
+    group_name = data.get("group_name")
+    sender = data.get("sender")
+    encrypted_message = data.get("message")
+    if not group_name or not sender or not encrypted_message:
+        return jsonify({"error": "group_name, sender, and message required"}), 400
+    try:
+        send_group_message(group_name, sender, encrypted_message)
+        return jsonify({"message": "Group message sent"}), 200
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+@app.route("/fetch_group_messages", methods=["GET"])
+def fetch_group_messages_route():
+    """
+    Return all messages in a group. Optionally pass 'since' param (ISO8601).
+    Example: GET /fetch_group_messages?group_name=TestGroup
+    """
+    group_name = request.args.get("group_name")
+    if not group_name:
+        return jsonify({"error": "group_name required"}), 400
+
+    since_str = request.args.get("since")
+    since_dt = None
+    # parse since_str if provided
+    if since_str:
+        try:
+            since_dt = datetime.fromisoformat(since_str)
+        except:
+            pass
+
+    msgs = fetch_group_messages(group_name, since=since_dt)
+    return jsonify({"messages": msgs}), 200
+
+# Just a convenience route: "Who is online?"
+@app.route("/online_users", methods=["GET"])
+def online_users():
+    """
+    Return the list of currently online usernames.
+    """
+    return jsonify({"online_users": list(active_users.keys())}), 200
+
+@app.route("/all_groups", methods=["GET"])
+def all_groups():
+    """
+    Return the list of all groups.
+    """
+    groups = groups_collection.find({}, {"_id": 0, "group_name": 1})
+    group_names = [group["group_name"] for group in groups]
+    return jsonify({"groups": group_names}), 200
+
 
 # ------------
-# SocketIO Events
+# Socket.IO Events
 # ------------
+
 @socketio.on('connect')
 def handle_connect():
     print("A user connected.")
@@ -167,6 +300,9 @@ def handle_register(data):
         return
     active_users[username] = request.sid
     print(f"{username} is online.")
+    # Optionally broadcast the updated online user list
+    socketio.emit('online_users_update', {"online_users": list(active_users.keys())})
+
 
 @socketio.on('send_message')
 def handle_send_message(data):
@@ -179,11 +315,35 @@ def handle_send_message(data):
     encrypted_message = data['message']
 
     if recipient in active_users:
-        # Send in real-time
         emit('receive_message', data, to=active_users[recipient])
     else:
-        # Save to DB for offline recipient
         save_message(sender, recipient, encrypted_message)
+
+    # Add each user to the other's friends list
+    add_friend(sender, recipient)
+        
+@socketio.on('send_group_message')
+def handle_send_group_message_socketio(data):
+    """
+    Real-time group message. If the group members are online, push immediately.
+    Otherwise, store it. (This is a simplified approach - no E2E group encryption.)
+    """
+    group_name = data.get("group_name")
+    sender = data.get("sender")
+    encrypted_message = data.get("message")
+    if not group_name or not sender or not encrypted_message:
+        return
+
+    try:
+        send_group_message(group_name, sender, encrypted_message)
+        # Now broadcast to all online members in that group
+        group_doc = groups_collection.find_one({"group_name": group_name})
+        if group_doc:
+            for member in group_doc["members"]:
+                if member in active_users:
+                    emit('receive_group_message', data, to=active_users[member])
+    except ValueError as e:
+        emit('error', {"message": str(e)})
 
 @socketio.on('message_read')
 def handle_message_read(data):
