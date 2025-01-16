@@ -50,9 +50,9 @@ class ChatWindow(QWidget):
         def connect():
             print("Socket.IO: Connected to server.")
             # Register this user so the server knows we're online
-            self.sio.emit('register', {'username': self.username})
+            self.sio.emit('register', {'username': self.username}, namespace='/chat')
 
-        @self.sio.on('receive_message')
+        @self.sio.on('receive_message', namespace='/chat')
         def on_receive_message(data):
             """
             Called when the server emits 'receive_message'.
@@ -75,7 +75,7 @@ class ChatWindow(QWidget):
         def connect_error(err):
             print(f"[ChatWindow] Socket.IO connection failed: {err}")
 
-        @self.sio.on('error')
+        @self.sio.on('error', namespace='/chat')
         def on_error(msg):
             print(f"[ChatWindow] Socket.IO error event: {msg}")
 
@@ -86,7 +86,7 @@ class ChatWindow(QWidget):
         # 3) Connect to Socket.IO server
         #    (Adjust URL/port if your server is elsewhere)
         try:
-            self.sio.connect("https://rsa-messenger-app-de61cf2676c2.herokuapp.com/chat")
+            self.sio.connect("https://rsa-messenger-app-de61cf2676c2.herokuapp.com/chat", transports=['websocket', 'polling'])
         except Exception as e:
             print(f"[ChatWindow] Could not connect to Socket.IO: {e}")
 
@@ -130,7 +130,7 @@ class ChatWindow(QWidget):
         }
         if self.sio.connected:
             # Real-time emit
-            self.sio.emit('send_message', data)
+            self.sio.emit('send_message', data, namespace='/chat')
             # Show on our own chat box
             self.update_chat(f"[Me -> {recipient}]: {message}")
             self.message_input.clear()

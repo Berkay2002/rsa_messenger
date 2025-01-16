@@ -163,7 +163,6 @@ def handle_connect():
     print("A user connected.")
     emit('connected', {'data': 'Connected to server'}, namespace='/chat')
 
-
 @socketio.on('register', namespace='/chat')
 def handle_register(data):
     """
