@@ -48,7 +48,7 @@ class LoginWindow(QWidget):
 
         # 2. Attempt /login
         try:
-            resp = requests.post("https://rsa-messenger-app.herokuapp.com/login", json={
+            resp = requests.post("https://rsa-messenger-app-de61cf2676c2.herokuapp.com/login", json={
                 "username": username,
                 "password": password
             })
@@ -115,7 +115,7 @@ class LoginWindow(QWidget):
 
         # Attempt registration
         try:
-            resp = requests.post("https://rsa-messenger-app.herokuapp.com/register", json={
+            resp = requests.post("https://rsa-messenger-app-de61cf2676c2.herokuapp.com/register", json={
                 "username": username,
                 "password": password,
                 "public_key": public_key,
