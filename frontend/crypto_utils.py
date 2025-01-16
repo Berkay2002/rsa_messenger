@@ -136,30 +136,27 @@ def verify_signature(plaintext, signature_bytes, signer_public_key_pem):
 # ----------------------------------------------------------------------
 # Example usage (comment out if you only want library functions)
 # ----------------------------------------------------------------------
-if __name__ == "__main__":
-    # Generate a new key pair
-    priv_key, pub_key = generate_keypair()
-    print("[*] Generated RSA Keypair.")
-    print("Private Key (PEM) starts with:", priv_key[:50], "...")
-    print("Public Key (PEM) starts with:", pub_key[:50], "...")
 
-    # Encrypt + Decrypt the private key with a password
-    password = "My$uperSecretPassphrase"
-    encrypted_priv = encrypt_private_key(priv_key, password)
-    print("\n[*] Encrypted Private Key (base64+JSON):", encrypted_priv[:80], "...")
+# if __name__ == "__main__":
+#     # Generate a new key pair
+#     # priv_key, pub_key = generate_keypair()
+#     # print("[*] Generated RSA Keypair.")
+#     # print("Private Key (PEM) starts with:", priv_key[:50], "...")
+#     # print("Public Key (PEM) starts with:", pub_key[:50], "...")
 
-    # Decrypt it again
-    decrypted_priv = decrypt_private_key(encrypted_priv, password)
-    print("[*] Decrypted Private Key matches original?", decrypted_priv == priv_key)
+#     # password = "My$uperSecretPassphrase"
+#     # encrypted_priv = encrypt_private_key(priv_key, password)
+#     # print("\n[*] Encrypted Private Key (base64+JSON):", encrypted_priv[:80], "...")
 
-    # Encrypt + Decrypt a simple message
-    message = "Hello, RSA!"
-    ciphertext = encrypt_message(message, pub_key)
-    print("\n[*] Ciphertext (hex) =", ciphertext.hex()[:64], "...")
-    decrypted_msg = decrypt_message(ciphertext, priv_key)
-    print("[*] Decrypted message:", decrypted_msg)
+#     # decrypted_priv = decrypt_private_key(encrypted_priv, password)
+#     # print("[*] Decrypted Private Key matches original?", decrypted_priv == priv_key)
 
-    # Sign + Verify a message
-    signature = sign_message(message, priv_key)
-    is_valid = verify_signature(message, signature, pub_key)
-    print("[*] Signature valid:", is_valid)
+#     # message = "Hello, RSA!"
+#     # ciphertext = encrypt_message(message, pub_key)
+#     # print("\n[*] Ciphertext (hex) =", ciphertext.hex()[:64], "...")
+#     # decrypted_msg = decrypt_message(ciphertext, priv_key)
+#     # print("[*] Decrypted message:", decrypted_msg)
+
+#     # signature = sign_message(message, priv_key)
+#     # is_valid = verify_signature(message, signature, pub_key)
+#     # print("[*] Signature valid:", is_valid)
