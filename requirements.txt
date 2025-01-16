@@ -1,7 +1,9 @@
-flask 
-pymongo 
-flask-socketio 
-PyQt5 
-websockets 
-PyCryptodome 
+flask
+pymongo
+flask-socketio
+PyQt5
+websockets
+PyCryptodome
 python-dotenv
+bcrypt
+passlib
