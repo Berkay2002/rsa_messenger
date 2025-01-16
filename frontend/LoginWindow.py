@@ -3,15 +3,14 @@ from PyQt5 import uic
 from PyQt5.QtWidgets import QWidget, QLineEdit, QLabel, QPushButton
 from PyQt5.QtCore import Qt
 
-# We'll import some helper crypto functions from a hypothetical `crypto_utils.py`
-# You can keep your existing RSA logic or adapt this as needed.
+# Import helper crypto functions
 from crypto_utils import (
     generate_keypair,
     encrypt_private_key,
     decrypt_private_key
 )
 
-# Import your ChatWindow class
+# Import ChatWindow class
 from ChatWindow import ChatWindow
 
 class LoginWindow(QWidget):
@@ -57,6 +56,10 @@ class LoginWindow(QWidget):
             self.set_error(f"Could not connect to server: {e}")
             return
 
+        # Print the response content for debugging
+        print(f"Response status code: {resp.status_code}")
+        print(f"Response content: {resp.text}")
+
         if resp.status_code == 200:
             # Login success
             data = resp.json()
@@ -96,47 +99,36 @@ class LoginWindow(QWidget):
             err_msg = err_json.get("error", "Unknown error")
             self.set_error(f"Login error: {err_msg}")
 
-    def register_user(self, username, password):
-        """
-        Called if the user doesn't exist. We generate RSA keys, encrypt the private key,
-        and send them to /register.
-        """
-        # 1. Generate RSA key pair
-        private_key, public_key = generate_keypair()
-
-        # 2. (Optional) Encrypt the private key so the server can store it
-        #    This is only if you want the server to "back up" the private key.
-        encrypted_priv = encrypt_private_key(private_key, password)
-
-        # 3. POST /register
-        try:
-            reg_resp = requests.post("http://127.0.0.1:5000/register", json={
-                "username": username,
-                "password": password,
-                "public_key": public_key,
-                "encrypted_private_key": encrypted_priv
-            })
-        except requests.exceptions.RequestException as e:
-            self.set_error(f"Registration failed: {e}")
-            return
-
-        if reg_resp.status_code == 201:
-            # Registration success
-            self.open_chat(username, private_key, public_key)
-        else:
-            err_data = reg_resp.json()
-            self.set_error(f"Register error: {err_data.get('error', 'Unknown error')}")
+    def set_error(self, message):
+        if self.error_label:
+            self.error_label.setText(message)
 
     def open_chat(self, username, private_key, public_key):
-        """
-        Switch to the ChatWindow, passing the keys along.
-        """
         self.chat_window = ChatWindow(username, private_key, public_key)
         self.chat_window.show()
         self.close()
 
-    def set_error(self, msg):
-        if self.error_label:
-            self.error_label.setText(msg)
+    def register_user(self, username, password):
+        # Generate keypair
+        private_key, public_key = generate_keypair()
+        encrypted_private_key = encrypt_private_key(private_key, password)
+
+        # Attempt registration
+        try:
+            resp = requests.post("http://127.0.0.1:5000/register", json={
+                "username": username,
+                "password": password,
+                "public_key": public_key,
+                "encrypted_private_key": encrypted_private_key
+            })
+        except requests.exceptions.RequestException as e:
+            self.set_error(f"Could not connect to server: {e}")
+            return
+
+        if resp.status_code == 201:
+            # Registration success
+            self.open_chat(username, private_key, public_key)
         else:
-            print(f"[LoginWindow] Error: {msg}")
+            err_json = resp.json()
+            err_msg = err_json.get("error", "Unknown error")
+            self.set_error(f"Registration error: {err_msg}")
