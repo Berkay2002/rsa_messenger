@@ -9,7 +9,7 @@ RSA Messenger is a secure real-time messaging application built with Python. It 
 - **Real-Time Messaging**: Communicate instantly using WebSockets.
 - **End-to-End Encryption (E2EE)**: Messages are encrypted using RSA and can only be decrypted by the recipient.
 - **Offline Message Storage**: Messages sent to offline users are stored securely on the server and delivered when the user reconnects.
-- **User Authentication**: Simple login system with RSA key management.
+- **User Authentication**: Secure login system with password hashing and RSA key management.
 - **Web Interface**: A responsive web-based GUI.
 
 ---
