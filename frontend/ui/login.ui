@@ -1,60 +1,85 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
-    <class>LoginWindow</class>
-    <widget class="QWidget" name="LoginWindow">
-        <property name="geometry">
-            <rect>
-                <x>0</x>
-                <y>0</y>
-                <width>320</width>
-                <height>180</height>
-            </rect>
-        </property>
-        <property name="windowTitle">
-            <string>Login</string>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayout">
-            <!-- Username Field -->
-            <item>
-                <widget class="QLineEdit" name="username_input">
-                    <property name="placeholderText">
-                        <string>Enter Username</string>
-                    </property>
-                </widget>
-            </item>
-            
-            <!-- Password Field -->
-            <item>
-                <widget class="QLineEdit" name="password_input">
-                    <property name="placeholderText">
-                        <string>Enter Password</string>
-                    </property>
-                    <property name="echoMode">
-                        <enum>QLineEdit::Password</enum>
-                    </property>
-                </widget>
-            </item>
-            
-            <!-- Error Label -->
-            <item>
-                <widget class="QLabel" name="error_label">
-                    <property name="alignment">
-                        <set>Qt::AlignCenter</set>
-                    </property>
-                    <property name="styleSheet">
-                        <string>color: red;</string>
-                    </property>
-                </widget>
-            </item>
-
-            <!-- Login Button -->
-            <item>
-                <widget class="QPushButton" name="login_button">
-                    <property name="text">
-                        <string>Login</string>
-                    </property>
-                </widget>
-            </item>
-        </layout>
+ <class>LoginWindow</class>
+ <widget class="QWidget" name="LoginWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>320</width>
+    <height>180</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Login</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 rgba(0, 0, 0, 255), stop:1 rgba(116, 116, 116, 255));</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLineEdit" name="username_input">
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(255,255,255);
+min-height: 30px;
+min-width: 100px;
+border: false;</string>
+     </property>
+     <property name="placeholderText">
+      <string>Enter Username</string>
+     </property>
     </widget>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="password_input">
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(255,255,255);
+min-height: 30px;
+min-width: 100px;
+border: false;</string>
+     </property>
+     <property name="echoMode">
+      <enum>QLineEdit::Password</enum>
+     </property>
+     <property name="placeholderText">
+      <string>Enter Password</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="error_label">
+     <property name="styleSheet">
+      <string notr="true">color: red;
+background-color: none;</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="login_button">
+     <property name="styleSheet">
+      <string notr="true">QPushButton {
+    background-color: rgb(0, 0, 0);
+    color: white;
+    border-radius: 10px;
+    padding: 10px 20px;
+    min-width: 100px;
+    min-height: 20px;
+}
+
+QPushButton:hover {
+	background-color: rgb(30, 30, 30);
+}</string>
+     </property>
+     <property name="text">
+      <string>Login</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
 </ui>
