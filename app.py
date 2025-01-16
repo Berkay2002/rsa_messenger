@@ -1,12 +1,10 @@
 import eventlet
 eventlet.monkey_patch()
 
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, render_template
 from flask_socketio import SocketIO, emit
-import logging
 from flask_cors import CORS
 
-# Import the updated model functions
 from models import (
     create_user,
     verify_user,
@@ -17,23 +15,18 @@ from models import (
     users_collection
 )
 
-app = Flask(__name__, static_folder='frontend')
+app = Flask(__name__)
 CORS(app)  # Enable CORS
 socketio = SocketIO(app, async_mode='eventlet')
 
 active_users = {}  # Track online users
 
-@app.route("/", methods=["POST", "GET"])
-def root():
-    return "Welcome to the RSA Messenger API"
-
+@app.route("/", methods=["GET"])
+def index():
+    return render_template("index.html")
 
 @app.route('/register', methods=['POST'])
 def register_user():
-    """
-    Register a new user with username, password, public_key, 
-    and optionally encrypted_private_key.
-    """
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
@@ -57,10 +50,6 @@ def register_user():
 
 @app.route('/login', methods=['POST'])
 def login_user():
-    """
-    Login an existing user by verifying username + password. 
-    Return the user's stored public_key and encrypted_private_key if it exists.
-    """
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
@@ -84,7 +73,6 @@ def login_user():
 
 @app.route('/send_message', methods=['POST'])
 def send_message_route():
-    """Save a message to the database."""
     data = request.get_json()
     sender = data['sender']
     recipient = data['recipient']
@@ -99,7 +87,6 @@ def send_message_route():
 
 @app.route('/fetch_messages', methods=['GET'])
 def fetch_messages_route():
-    """Fetch undelivered messages for a user."""
     username = request.args.get('username')
     if not username:
         return jsonify({"error": "Username is required"}), 400
@@ -124,10 +111,6 @@ def fetch_messages_route():
 
 @app.route('/get_public_key', methods=['GET'])
 def get_public_key():
-    """
-    Return the public key of the user specified by `?username=...`.
-    Example: GET /get_public_key?username=Berkay
-    """
     username = request.args.get('username')
     if not username:
         return jsonify({"error": "Username is required"}), 400
@@ -142,7 +125,6 @@ def get_public_key():
 
     return jsonify({"public_key": public_key}), 200
 
-
 # ------------ SocketIO Events ------------
 
 @socketio.on('connect')
@@ -150,28 +132,30 @@ def handle_connect():
     print("A user connected to the default namespace.")
     emit('connected', {'data': 'Connected to server'})
 
-@socketio.on('register')
-def handle_register(data):
+@socketio.on('user_join')
+def handle_user_join(data):
     username = data.get('username')
-    if not username or not users_collection.find_one({"username": username}):
-        emit('error', {"message": "Invalid or non-existent user"})
+    public_key = data.get('public_key')
+    if not username or not public_key:
+        emit("error", {"message": "Username and public_key are required."})
         return
     active_users[username] = request.sid
-    print(f"{username} is online. SID: {request.sid}")
+    print(f"User {username} joined!")
+    emit("chat", {"message": f"{username} has joined the chat."}, broadcast=True)
 
-@socketio.on('send_message')
-def handle_send_message(data):
-    sender = data['sender']
-    recipient = data['recipient']
-    encrypted_message = data['message']
-    print(f"Received message from {sender} to {recipient}: {encrypted_message}")
-
-    if recipient in active_users:
-        emit('receive_message', data, to=active_users[recipient])
-        print(f"Message sent to {recipient} in real-time.")
+@socketio.on('new_message')
+def handle_new_message(data):
+    message = data.get("message")
+    username = None 
+    for user, sid in active_users.items():
+        if sid == request.sid:
+            username = user
+            break
+    if username and message:
+        emit("chat", {"message": message, "username": username}, broadcast=True)
+        print(f"New message from {username}: {message}")
     else:
-        save_message(sender, recipient, encrypted_message)
-        print(f"Message saved for offline recipient {recipient}.")
+        emit("error", {"message": "Invalid message or user."})
 
 @socketio.on('disconnect')
 def handle_disconnect():
@@ -179,6 +163,7 @@ def handle_disconnect():
         if sid == request.sid:
             del active_users[user]
             print(f"{user} disconnected. SID: {request.sid}")
+            emit("chat", {"message": f"{user} has left the chat."}, broadcast=True)
             break
 
 if __name__ == "__main__":

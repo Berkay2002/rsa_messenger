@@ -1,8 +1,7 @@
 flask
 pymongo
 flask-socketio
-PyQt5
-websockets
+flask-cors
 PyCryptodome
 python-dotenv
 bcrypt
@@ -10,4 +9,3 @@ passlib
 gunicorn
 websocket-client
 eventlet
-flask-cors
