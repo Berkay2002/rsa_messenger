@@ -140,9 +140,7 @@ def get_public_key():
     return jsonify({"public_key": public_key}), 200
 
 
-# ------------
-# SocketIO Events
-# ------------
+# ------------ SocketIO Events ------------
 
 @socketio.on('connect', namespace='/chat')
 def handle_connect():
@@ -151,11 +149,6 @@ def handle_connect():
 
 @socketio.on('register', namespace='/chat')
 def handle_register(data):
-    """
-    Called if a client tries to 'register' via Socket.IO. 
-    In your PyQt, you might just do HTTP calls for register/login,
-    but you can also do it over Socket.IO if you prefer.
-    """
     username = data.get('username')
     if not username or not users_collection.find_one({"username": username}):
         emit('error', {"message": "Invalid or non-existent user"}, namespace='/chat')
@@ -165,10 +158,6 @@ def handle_register(data):
 
 @socketio.on('send_message', namespace='/chat')
 def handle_send_message(data):
-    """
-    Real-time message sending via Socket.IO. 
-    If recipient is online, deliver immediately; otherwise, save to DB.
-    """
     sender = data['sender']
     recipient = data['recipient']
     encrypted_message = data['message']
