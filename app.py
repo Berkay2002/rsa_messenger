@@ -14,7 +14,7 @@ from models import (
 )
 
 app = Flask(__name__, static_folder='frontend')
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode='eventlet')
 
 active_users = {}  # Track online users
 

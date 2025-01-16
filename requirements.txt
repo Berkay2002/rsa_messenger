@@ -9,3 +9,4 @@ bcrypt
 passlib
 gunicorn
 websocket-client
+eventlet
