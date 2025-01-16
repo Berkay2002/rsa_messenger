@@ -1,54 +1,90 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
-    <class>ChatWindow</class>
-    <widget class="QWidget" name="ChatWindow">
-        <property name="geometry">
-            <rect>
-                <x>0</x>
-                <y>0</y>
-                <width>600</width>
-                <height>400</height>
-            </rect>
-        </property>
-        <property name="windowTitle">
-            <string>Chat</string>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayout">
-            <!-- Text area to display chat messages -->
-            <item>
-                <widget class="QTextBrowser" name="chatBox">
-                    <property name="placeholderText">
-                        <string>Chat messages will appear here...</string>
-                    </property>
-                </widget>
-            </item>
-
-            <!-- Recipient input -->
-            <item>
-                <widget class="QLineEdit" name="recipient_input">
-                    <property name="placeholderText">
-                        <string>Recipient username</string>
-                    </property>
-                </widget>
-            </item>
-
-            <!-- Message input -->
-            <item>
-                <widget class="QLineEdit" name="message_input">
-                    <property name="placeholderText">
-                        <string>Type your message...</string>
-                    </property>
-                </widget>
-            </item>
-
-            <!-- Send button -->
-            <item>
-                <widget class="QPushButton" name="send_button">
-                    <property name="text">
-                        <string>Send</string>
-                    </property>
-                </widget>
-            </item>
-        </layout>
+ <class>ChatWindow</class>
+ <widget class="QWidget" name="ChatWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>375</width>
+    <height>252</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Chat</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 rgba(0, 0, 0, 255), stop:1 rgba(116, 116, 116, 255));</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QTextBrowser" name="chatBox">
+     <property name="styleSheet">
+      <string notr="true">border: false;
+min-height: 30px;
+min-width: 100px;
+background-color: rgb(255, 255, 255);</string>
+     </property>
+     <property name="placeholderText">
+      <string>Chat messages will appear here...</string>
+     </property>
     </widget>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="recipient_input">
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(255,255,255);
+min-height: 30px;
+min-width: 100px;
+border: false;</string>
+     </property>
+     <property name="placeholderText">
+      <string>Recipient username</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="message_input">
+     <property name="autoFillBackground">
+      <bool>false</bool>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(255, 255, 255);
+min-height: 30px;
+min-width: 100px;
+border: false;</string>
+     </property>
+     <property name="placeholderText">
+      <string>Type your message...</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="send_button">
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton {
+    background-color: rgb(0, 0, 0);
+    color: white;
+    border-radius: 10px;
+    padding: 10px 20px;
+    min-width: 100px;
+    min-height: 20px;
+}
+
+QPushButton:hover {
+	background-color: rgb(30, 30, 30);
+}</string>
+     </property>
+     <property name="text">
+      <string>Send</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
 </ui>
