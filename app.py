@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, send_from_directory
 from flask_socketio import SocketIO, emit
 import logging
+from flask_cors import CORS
 
 # Import the updated model functions
 from models import (
@@ -14,6 +15,7 @@ from models import (
 )
 
 app = Flask(__name__, static_folder='frontend')
+CORS(app)  # Enable CORS
 socketio = SocketIO(app, async_mode='eventlet')
 
 active_users = {}  # Track online users
@@ -155,13 +157,14 @@ def get_public_key():
 # ------------
 # SocketIO Events
 # ------------
-@socketio.on('connect')
+
+@socketio.on('connect', namespace='/chat')
 def handle_connect():
     print("A user connected.")
-    emit('connected', {'data': 'Connected to server'})
+    emit('connected', {'data': 'Connected to server'}, namespace='/chat')
 
 
-@socketio.on('register')
+@socketio.on('register', namespace='/chat')
 def handle_register(data):
     """
     Called if a client tries to 'register' via Socket.IO. 
@@ -175,7 +178,7 @@ def handle_register(data):
     active_users[username] = request.sid
     print(f"{username} is online.")
 
-@socketio.on('send_message')
+@socketio.on('send_message', namespace='/chat')
 def handle_send_message(data):
     """
     Real-time message sending via Socket.IO. 
@@ -200,7 +203,7 @@ def handle_message_read(data):
         {"$set": {"read": True}}
     )
 
-@socketio.on('disconnect')
+@socketio.on('disconnect', namespace='/chat')
 def handle_disconnect():
     for user, sid in list(active_users.items()):
         if sid == request.sid:
